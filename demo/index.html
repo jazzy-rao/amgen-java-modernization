@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Java Modernization Demo - Oracle JDK to Red Hat OpenJDK</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --card: #ffffff; --text: #1f2933; --muted: #5f6c7b; --line: #d8dee6;
+    --before: #8a4b08; --before-bg: #fff6ea; --before-line: #f0c58a;
+    --bob: #0f62fe; --bob-bg: #edf3ff; --bob-line: #a6c8ff;
+    --after: #a2191f; --after-bg: #fff1f1; --after-line: #f1a5a8;
+    --ok: #0e6027; --ok-bg: #defbe6; --bad: #a2191f; --bad-bg: #fff1f1;
+    --neutral: #4d5358; --neutral-bg: #e8ebee; --pend: #8a6100; --pend-bg: #fcf4d6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.5 -apple-system, "Segoe UI", system-ui, Helvetica, Arial, sans-serif; }
+  header { padding: 20px 32px 8px; }
+  h1 { margin: 0; font-size: 26px; }
+  .sub { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 8px 32px 0; font-size: 14px; color: var(--muted); }
+  .flow { display: grid; grid-template-columns: 1fr 52px 1fr 52px 1fr; align-items: stretch; gap: 0; padding: 16px 32px; }
+  .arrow { display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--muted); }
+  .col { background: var(--card); border: 2px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+  .col > h2 { margin: 0; padding: 14px 18px; font-size: 19px; }
+  .col .tag { display: block; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .85; }
+  .col.before { border-color: var(--before-line); } .col.before > h2 { background: var(--before-bg); color: var(--before); }
+  .col.bob    { border-color: var(--bob-line); }    .col.bob > h2    { background: var(--bob-bg);    color: var(--bob); }
+  .col.after  { border-color: var(--after-line); }  .col.after > h2  { background: var(--after-bg);  color: var(--after); }
+  .body { padding: 6px 18px 16px; }
+  h3 { margin: 16px 0 6px; font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  ul { margin: 4px 0; padding-left: 20px; } li { margin: 3px 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .label { font-weight: 600; }
+  .detail { color: var(--muted); font-size: 14px; margin: 2px 0 6px; word-break: break-word; }
+  .badge { display: inline-block; white-space: nowrap; padding: 2px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+  .s-not-run { background: var(--neutral-bg); color: var(--neutral); }
+  .s-pending { background: var(--pend-bg); color: var(--pend); }
+  .s-passed  { background: var(--ok-bg); color: var(--ok); }
+  .s-failed  { background: var(--bad-bg); color: var(--bad); }
+  .s-info    { background: var(--bob-bg); color: var(--bob); }
+  .kind { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); background: #fff; }
+  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+  .note { margin: 0 32px 12px; padding: 10px 14px; background: var(--card); border-left: 4px solid var(--bob); border-radius: 4px; font-size: 14px; color: var(--muted); }
+  section.summary { margin: 0 32px 24px; background: var(--card); border: 2px solid var(--line); border-radius: 10px; padding: 8px 18px 16px; }
+  section.summary h2 { margin: 12px 0 0; font-size: 19px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 15px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+  footer { padding: 0 32px 24px; color: var(--muted); font-size: 13px; }
+  @media (max-width: 1100px) {
+    .flow { grid-template-columns: 1fr; gap: 0; }
+    .arrow { transform: rotate(90deg); height: 52px; }
+  }
+  @media print { body { background: #fff; } }
+</style>
+<script src="results.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>Java Modernization: Oracle JDK 17 &rarr; IBM Bob &rarr; Red Hat OpenJDK 17</h1>
+  <p class="sub">Lab Sample Tracker (fictional, synthetic data). Results shown here come only from <span class="mono">demo/results.js</span>, which is edited by hand.</p>
+</header>
+
+<div class="legend">
+  <span><span class="kind">PLANNED</span> intended target, not a result</span>
+  <span><span class="kind">FINDING</span> reported by Bob's assessment</span>
+  <span><span class="kind">CHANGE</span> actually applied to the project</span>
+  <span><span class="kind">VERIFIED</span> real build/test run</span>
+</div>
+
+<div class="flow">
+
+  <!-- LEFT -->
+  <article class="col before">
+    <h2><span class="tag">Before</span>Oracle JDK 17</h2>
+    <div class="body">
+      <h3>Java runtime <span class="kind">PLANNED</span></h3>
+      <div>Baseline runtime: Oracle JDK 17</div>
+      <div class="detail">Detected: <span id="before-runtime" class="mono"></span></div>
+
+      <h3>Project &amp; build configuration</h3>
+      <ul>
+        <li>Maven project, Java 17 (<span class="mono">java.version</span> in <span class="mono">pom.xml</span>)</li>
+        <li>Compiler <span class="mono">release</span> = 17</li>
+        <li>JUnit Jupiter 5.10.2 (test scope only)</li>
+        <li>Plain Java, no runtime dependencies</li>
+      </ul>
+
+      <h3>Baseline results <span class="kind">VERIFIED</span></h3>
+      <div class="row"><span class="label">Build</span><span id="before-build"></span></div>
+      <div id="before-build-detail" class="detail"></div>
+      <div class="row"><span class="label">Tests</span><span id="before-tests"></span></div>
+      <div id="before-tests-detail" class="detail"></div>
+
+      <h3>Areas to assess <span class="kind">PLANNED</span></h3>
+      <div class="detail">Checklist of what to look at. These are not findings.</div>
+      <ul>
+        <li>Vendor-specific or internal JDK APIs in source</li>
+        <li>JVM flags in scripts or launch configuration</li>
+        <li>JAVA_HOME / Maven toolchain / CI settings</li>
+        <li>Container images or docs naming Oracle JDK</li>
+      </ul>
+    </div>
+  </article>
+
+  <div class="arrow" aria-hidden="true">&rarr;</div>
+
+  <!-- CENTER -->
+  <article class="col bob">
+    <h2><span class="tag">Assist</span>IBM Bob</h2>
+    <div class="body">
+      <h3>1. Assess the project</h3>
+      <div class="row"><span class="label">Assessment</span><span id="assess-status"></span></div>
+      <div id="assess-summary" class="detail"></div>
+
+      <h3>2. Identify compatibility concerns <span class="kind">FINDING</span></h3>
+      <div id="findings"></div>
+
+      <h3>3. Assist with migration changes <span class="kind">CHANGE</span></h3>
+      <div class="row"><span class="label">Changes</span><span id="changes-status"></span></div>
+      <div id="changes-summary" class="detail"></div>
+
+      <h3>4. Validate the result <span class="kind">VERIFIED</span></h3>
+      <div class="row"><span class="label">Target build + tests</span><span id="validate-status"></span></div>
+      <div class="detail">Shown as Passed only when both target build and tests are recorded as passed.</div>
+    </div>
+  </article>
+
+  <div class="arrow" aria-hidden="true">&rarr;</div>
+
+  <!-- RIGHT -->
+  <article class="col after">
+    <h2><span class="tag">After</span>Red Hat OpenJDK 17</h2>
+    <div class="body">
+      <h3>Java runtime <span class="kind">PLANNED</span></h3>
+      <div>Target runtime: Red Hat build of OpenJDK 17</div>
+      <div class="detail">Detected: <span id="after-runtime" class="mono"></span></div>
+
+      <h3>Updated configuration <span class="kind">CHANGE</span></h3>
+      <div id="after-config" class="detail"></div>
+
+      <h3>Target results <span class="kind">VERIFIED</span></h3>
+      <div class="row"><span class="label">Build</span><span id="after-build"></span></div>
+      <div id="after-build-detail" class="detail"></div>
+      <div class="row"><span class="label">Tests</span><span id="after-tests"></span></div>
+      <div id="after-tests-detail" class="detail"></div>
+
+      <h3>Remaining issues / follow-up</h3>
+      <div id="followups"></div>
+    </div>
+  </article>
+
+</div>
+
+<p class="note">Moving between Oracle JDK 17 and Red Hat build of OpenJDK 17 does not necessarily require source-code changes. The outcome shown here is whatever Bob's assessment and your validation actually recorded.</p>
+
+<section class="summary">
+  <h2>Files changed <span class="kind">CHANGE</span></h2>
+  <div id="files"></div>
+  <h2>Latest validation summary <span class="kind">VERIFIED</span></h2>
+  <table>
+    <thead><tr><th>Stage</th><th>Build</th><th>Tests</th><th>Runtime detected</th></tr></thead>
+    <tbody>
+      <tr><td>Before (Oracle JDK 17)</td><td id="sum-before-build"></td><td id="sum-before-tests"></td><td id="sum-before-runtime" class="mono"></td></tr>
+      <tr><td>After (Red Hat OpenJDK 17)</td><td id="sum-after-build"></td><td id="sum-after-tests"></td><td id="sum-after-runtime" class="mono"></td></tr>
+    </tbody>
+  </table>
+  <div class="detail">Last updated: <span id="updated"></span></div>
+</section>
+
+<footer>Standalone page: no server, no internet, no external libraries. Edit <span class="mono">demo/results.js</span> and refresh. Reset with <span class="mono">./scripts/reset-demo.sh</span>.</footer>
+
+<script>
+(function () {
+  var R = window.DEMO_RESULTS || {};
+  var B = R.before || {}, A = R.after || {}, S = R.assessment || {}, C = R.changes || {};
+
+  var LABEL = { "not-run": "\u25CB Not yet run", "pending": "\u25D4 Pending verification",
+                "passed": "\u2713 Passed", "failed": "\u2715 Failed", "info": "\u2139 Info" };
+
+  // A "passed" claim needs a recorded detail; otherwise it is shown as pending verification.
+  function norm(item) {
+    item = item || {};
+    var s = LABEL[item.status] ? item.status : "not-run";
+    if (s === "passed" && !String(item.detail || "").trim()) s = "pending";
+    return s;
+  }
+  function badge(s) {
+    var b = document.createElement("span");
+    b.className = "badge s-" + s; b.textContent = LABEL[s];
+    return b;
+  }
+  function put(id, node) {
+    var el = document.getElementById(id); el.textContent = "";
+    el.appendChild(typeof node === "string" ? document.createTextNode(node) : node);
+  }
+  function text(id, t, fallback) { put(id, String(t || "").trim() || fallback); }
+  function list(id, items, emptyText, render) {
+    var el = document.getElementById(id); el.textContent = "";
+    if (!items || !items.length) {
+      var d = document.createElement("div"); d.className = "detail"; d.textContent = emptyText; el.appendChild(d); return;
+    }
+    var ul = document.createElement("ul");
+    items.forEach(function (it) { var li = document.createElement("li"); render(li, it); ul.appendChild(li); });
+    el.appendChild(ul);
+  }
+
+  text("before-runtime", B.runtimeDetected, "Not yet captured");
+  text("after-runtime", A.runtimeDetected, "Not yet captured");
+  text("sum-before-runtime", B.runtimeDetected, "-");
+  text("sum-after-runtime", A.runtimeDetected, "-");
+
+  [["before", B], ["after", A]].forEach(function (p) {
+    ["build", "tests"].forEach(function (k) {
+      var s = norm(p[1][k]);
+      put(p[0] + "-" + k, badge(s));
+      put("sum-" + p[0] + "-" + k, badge(s));
+      text(p[0] + "-" + k + "-detail", p[1][k] && p[1][k].detail, "");
+    });
+  });
+
+  var as = norm(S);
+  put("assess-status", badge(as));
+  text("assess-summary", S.summary, "No assessment recorded yet.");
+  list("findings", S.findings,
+       as === "not-run" ? "Nothing recorded yet." : "No concerns recorded.",
+       function (li, t) { li.textContent = t; });
+
+  var cs = norm(C);
+  put("changes-status", badge(cs));
+  text("changes-summary", C.summary, "No changes recorded yet.");
+
+  var vs = (norm(A.build) === "passed" && norm(A.tests) === "passed") ? "passed"
+         : (norm(A.build) === "failed" || norm(A.tests) === "failed") ? "failed"
+         : (norm(A.build) === "not-run" && norm(A.tests) === "not-run") ? "not-run" : "pending";
+  put("validate-status", badge(vs));
+
+  var files = C.files || [];
+  list("files", files, "No file changes recorded.", function (li, f) {
+    var path = document.createElement("span"); path.className = "mono"; path.textContent = f.path || "";
+    li.appendChild(path);
+    if (f.note) li.appendChild(document.createTextNode(" \u2014 " + f.note));
+  });
+  list("after-config", files.filter(function (f) { return /pom\.xml|\.mvn|toolchains|settings/i.test(f.path || ""); }),
+       "No configuration changes recorded.", function (li, f) {
+    li.textContent = (f.path || "") + (f.note ? " \u2014 " + f.note : "");
+  });
+
+  list("followups", A.followUps, "None recorded.", function (li, t) { li.textContent = t; });
+  text("updated", R.updated, "not recorded");
+})();
+</script>
+</body>
+</html>
