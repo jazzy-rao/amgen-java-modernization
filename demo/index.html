@@ -5,78 +5,111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Java Modernization Demo - Oracle JDK to Red Hat OpenJDK</title>
 <style>
+  /* Carbon-style visual language (white theme), implemented as inline CSS so the page stays fully offline.
+     Tokens follow Carbon's gray scale, blue-60 interactive color, 2px radius, 8px spacing scale. */
   :root {
-    --bg: #f4f6f8; --card: #ffffff; --text: #1f2933; --muted: #5f6c7b; --line: #d8dee6;
-    --before: #8a4b08; --before-bg: #fff6ea; --before-line: #f0c58a;
-    --bob: #0f62fe; --bob-bg: #edf3ff; --bob-line: #a6c8ff;
-    --after: #a2191f; --after-bg: #fff1f1; --after-line: #f1a5a8;
-    --ok: #0e6027; --ok-bg: #defbe6; --bad: #a2191f; --bad-bg: #fff1f1;
-    --neutral: #4d5358; --neutral-bg: #e8ebee; --pend: #8a6100; --pend-bg: #fcf4d6;
+    --layer-bg: #f4f4f4; --layer: #ffffff; --border: #e0e0e0; --border-strong: #8d8d8d;
+    --text: #161616; --text-secondary: #525252; --text-on-color: #ffffff;
+    --shell: #161616; --shell-text-secondary: #c6c6c6; --focus: #0f62fe; --interactive: #0f62fe;
+    --before: #ba4e00; --bob: #0f62fe; --after: #da1e28;
+    --tag-gray-bg: #e0e0e0;  --tag-gray-fg: #161616;
+    --tag-yellow-bg: #fcf4d6; --tag-yellow-fg: #684e00;
+    --tag-green-bg: #a7f0ba; --tag-green-fg: #044317;
+    --tag-red-bg: #ffd7d9;   --tag-red-fg: #750e13;
+    --tag-blue-bg: #d0e2ff;  --tag-blue-fg: #002d9c;
+    --font: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-         font: 16px/1.5 -apple-system, "Segoe UI", system-ui, Helvetica, Arial, sans-serif; }
-  header { padding: 20px 32px 8px; }
-  h1 { margin: 0; font-size: 26px; }
-  .sub { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
-  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 8px 32px 0; font-size: 14px; color: var(--muted); }
-  .flow { display: grid; grid-template-columns: 1fr 52px 1fr 52px 1fr; align-items: stretch; gap: 0; padding: 16px 32px; }
-  .arrow { display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--muted); }
-  .col { background: var(--card); border: 2px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
-  .col > h2 { margin: 0; padding: 14px 18px; font-size: 19px; }
-  .col .tag { display: block; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .85; }
-  .col.before { border-color: var(--before-line); } .col.before > h2 { background: var(--before-bg); color: var(--before); }
-  .col.bob    { border-color: var(--bob-line); }    .col.bob > h2    { background: var(--bob-bg);    color: var(--bob); }
-  .col.after  { border-color: var(--after-line); }  .col.after > h2  { background: var(--after-bg);  color: var(--after); }
-  .body { padding: 6px 18px 16px; }
-  h3 { margin: 16px 0 6px; font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-  ul { margin: 4px 0; padding-left: 20px; } li { margin: 3px 0; }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
-  .row:last-child { border-bottom: 0; }
+  body { margin: 0; background: var(--layer-bg); color: var(--text); font: 400 16px/1.5 var(--font); letter-spacing: 0; }
+
+  /* UI shell header */
+  .shell { background: var(--shell); color: var(--text-on-color); padding: 24px 32px 24px; border-bottom: 1px solid #393939; }
+  .shell .eyebrow { margin: 0 0 4px; font-size: 12px; line-height: 16px; letter-spacing: .32px; text-transform: uppercase; color: var(--shell-text-secondary); }
+  h1 { margin: 0; font-size: 28px; line-height: 36px; font-weight: 400; }
+  .sub { margin: 8px 0 0; color: var(--shell-text-secondary); font-size: 14px; line-height: 20px; letter-spacing: .16px; max-width: 960px; }
+  .sub .mono { color: var(--text-on-color); }
+
+  main { max-width: 1584px; margin: 0 auto; padding: 0 32px; }
+
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 16px 0 0; font-size: 14px; line-height: 20px; color: var(--text-secondary); }
+  .legend > span { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* Three-column flow */
+  .flow { display: grid; grid-template-columns: 1fr 32px 1fr 32px 1fr; align-items: stretch; padding: 16px 0; }
+  .arrow { display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text-secondary); }
+  .col { background: var(--layer); border: 1px solid var(--border); border-top: 4px solid var(--border-strong); display: flex; flex-direction: column; }
+  .col.before { border-top-color: var(--before); }
+  .col.bob    { border-top-color: var(--bob); }
+  .col.after  { border-top-color: var(--after); }
+  .col > h2 { margin: 0; padding: 16px 16px 12px; font-size: 20px; line-height: 28px; font-weight: 400; border-bottom: 1px solid var(--border); }
+  .col .eyebrow { display: block; font-size: 12px; line-height: 16px; letter-spacing: .32px; text-transform: uppercase; color: var(--text-secondary); }
+  .body { padding: 0 16px 16px; }
+  h3 { margin: 24px 0 8px; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: .16px; color: var(--text); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  ul { margin: 4px 0; padding-left: 20px; } li { margin: 4px 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .row:first-of-type { border-top: 1px solid var(--border); }
   .row .label { font-weight: 600; }
-  .detail { color: var(--muted); font-size: 14px; margin: 2px 0 6px; word-break: break-word; }
-  .badge { display: inline-block; white-space: nowrap; padding: 2px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; }
-  .s-not-run { background: var(--neutral-bg); color: var(--neutral); }
-  .s-pending { background: var(--pend-bg); color: var(--pend); }
-  .s-passed  { background: var(--ok-bg); color: var(--ok); }
-  .s-failed  { background: var(--bad-bg); color: var(--bad); }
-  .s-info    { background: var(--bob-bg); color: var(--bob); }
-  .kind { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); background: #fff; }
-  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
-  .note { margin: 0 32px 12px; padding: 10px 14px; background: var(--card); border-left: 4px solid var(--bob); border-radius: 4px; font-size: 14px; color: var(--muted); }
-  section.summary { margin: 0 32px 24px; background: var(--card); border: 2px solid var(--line); border-radius: 10px; padding: 8px 18px 16px; }
-  section.summary h2 { margin: 12px 0 0; font-size: 19px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 15px; }
-  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
-  footer { padding: 0 32px 24px; color: var(--muted); font-size: 13px; }
+  .detail { color: var(--text-secondary); font-size: 14px; line-height: 20px; letter-spacing: .16px; margin: 4px 0 8px; word-break: break-word; }
+
+  /* Tags: status (rounded) and kind (outline) */
+  .badge { display: inline-flex; align-items: center; white-space: nowrap; min-height: 24px; padding: 0 8px; border-radius: 24px; font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: .32px; }
+  .s-not-run { background: var(--tag-gray-bg);   color: var(--tag-gray-fg); }
+  .s-pending { background: var(--tag-yellow-bg); color: var(--tag-yellow-fg); }
+  .s-passed  { background: var(--tag-green-bg);  color: var(--tag-green-fg); }
+  .s-failed  { background: var(--tag-red-bg);    color: var(--tag-red-fg); }
+  .s-info    { background: var(--tag-blue-bg);   color: var(--tag-blue-fg); }
+  .kind { display: inline-flex; align-items: center; min-height: 20px; padding: 0 8px; border-radius: 24px; font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: .32px; background: var(--layer); color: var(--text-secondary); border: 1px solid var(--border-strong); }
+  .mono { font-family: var(--mono); font-size: 13px; }
+
+  /* Inline notification (information) */
+  .note { display: flex; gap: 12px; margin: 0 0 16px; padding: 12px 16px; background: #edf5ff; border: 1px solid #d0e2ff; border-left: 3px solid var(--interactive); font-size: 14px; line-height: 20px; letter-spacing: .16px; color: var(--text); }
+  .note .ico { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--interactive); color: #fff; font: 700 13px/20px var(--font); text-align: center; }
+  .note p { margin: 0; }
+
+  /* Summary tile and data table */
+  section.summary { margin: 0 0 24px; background: var(--layer); border: 1px solid var(--border); padding: 0 16px 16px; }
+  section.summary h2 { margin: 24px 0 8px; font-size: 20px; line-height: 28px; font-weight: 400; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px; letter-spacing: .16px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { background: var(--layer-bg); color: var(--text); font-size: 14px; font-weight: 600; }
+  tbody tr:hover { background: #e8e8e8; }
+
+  footer { max-width: 1584px; margin: 0 auto; padding: 0 32px 32px; color: var(--text-secondary); font-size: 12px; line-height: 16px; letter-spacing: .32px; }
+
   @media (max-width: 1100px) {
-    .flow { grid-template-columns: 1fr; gap: 0; }
-    .arrow { transform: rotate(90deg); height: 52px; }
+    .flow { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); height: 40px; }
+    .shell, main, footer { padding-left: 16px; padding-right: 16px; }
+    main { padding-top: 0; }
   }
-  @media print { body { background: #fff; } }
+  @media print { body { background: #fff; } .shell { background: #fff; color: #161616; border-bottom: 1px solid #161616; } .sub, .shell .eyebrow, .sub .mono { color: #525252; } }
 </style>
 <script src="results.js"></script>
 </head>
 <body>
 
-<header>
+<header class="shell">
+  <p class="eyebrow">Amgen &middot; Lab Sample Tracker &middot; Java 17</p>
   <h1>Java Modernization: Oracle JDK 17 &rarr; IBM Bob &rarr; Red Hat OpenJDK 17</h1>
-  <p class="sub">Lab Sample Tracker (fictional, synthetic data). Results shown here come only from <span class="mono">demo/results.js</span>, which is edited by hand.</p>
+  <p class="sub">Fictional, synthetic data. Results shown here come only from <span class="mono">demo/results.js</span>, which is edited by hand.</p>
 </header>
 
-<div class="legend">
-  <span><span class="kind">PLANNED</span> intended target, not a result</span>
-  <span><span class="kind">FINDING</span> reported by Bob's assessment</span>
-  <span><span class="kind">CHANGE</span> actually applied to the project</span>
-  <span><span class="kind">VERIFIED</span> real build/test run</span>
+<main>
+
+<div class="legend" role="list" aria-label="Label legend">
+  <span role="listitem"><span class="kind">PLANNED</span> intended target, not a result</span>
+  <span role="listitem"><span class="kind">FINDING</span> reported by Bob's assessment</span>
+  <span role="listitem"><span class="kind">CHANGE</span> actually applied to the project</span>
+  <span role="listitem"><span class="kind">VERIFIED</span> real build/test run</span>
 </div>
 
 <div class="flow">
 
   <!-- LEFT -->
   <article class="col before">
-    <h2><span class="tag">Before</span>Oracle JDK 17</h2>
+    <h2><span class="eyebrow">Before</span>Oracle JDK 17</h2>
     <div class="body">
       <h3>Java runtime <span class="kind">PLANNED</span></h3>
       <div>Baseline runtime: Oracle JDK 17</div>
@@ -111,7 +144,7 @@
 
   <!-- CENTER -->
   <article class="col bob">
-    <h2><span class="tag">Assist</span>IBM Bob</h2>
+    <h2><span class="eyebrow">Assist</span>IBM Bob</h2>
     <div class="body">
       <h3>1. Assess the project</h3>
       <div class="row"><span class="label">Assessment</span><span id="assess-status"></span></div>
@@ -134,7 +167,7 @@
 
   <!-- RIGHT -->
   <article class="col after">
-    <h2><span class="tag">After</span>Red Hat OpenJDK 17</h2>
+    <h2><span class="eyebrow">After</span>Red Hat OpenJDK 17</h2>
     <div class="body">
       <h3>Java runtime <span class="kind">PLANNED</span></h3>
       <div>Target runtime: Red Hat build of OpenJDK 17</div>
@@ -156,23 +189,25 @@
 
 </div>
 
-<p class="note">Moving between Oracle JDK 17 and Red Hat build of OpenJDK 17 does not necessarily require source-code changes. The outcome shown here is whatever Bob's assessment and your validation actually recorded.</p>
+<div class="note" role="note"><span class="ico" aria-hidden="true">i</span><p>Moving between Oracle JDK 17 and Red Hat build of OpenJDK 17 does not necessarily require source-code changes. The outcome shown here is whatever Bob's assessment and your validation actually recorded.</p></div>
 
 <section class="summary">
   <h2>Files changed <span class="kind">CHANGE</span></h2>
   <div id="files"></div>
   <h2>Latest validation summary <span class="kind">VERIFIED</span></h2>
   <table>
-    <thead><tr><th>Stage</th><th>Build</th><th>Tests</th><th>Runtime detected</th></tr></thead>
+    <thead><tr><th scope="col">Stage</th><th scope="col">Build</th><th scope="col">Tests</th><th scope="col">Runtime detected</th></tr></thead>
     <tbody>
-      <tr><td>Before (Oracle JDK 17)</td><td id="sum-before-build"></td><td id="sum-before-tests"></td><td id="sum-before-runtime" class="mono"></td></tr>
-      <tr><td>After (Red Hat OpenJDK 17)</td><td id="sum-after-build"></td><td id="sum-after-tests"></td><td id="sum-after-runtime" class="mono"></td></tr>
+      <tr><th scope="row" style="background:none;font-weight:400">Before (Oracle JDK 17)</th><td id="sum-before-build"></td><td id="sum-before-tests"></td><td id="sum-before-runtime" class="mono"></td></tr>
+      <tr><th scope="row" style="background:none;font-weight:400">After (Red Hat OpenJDK 17)</th><td id="sum-after-build"></td><td id="sum-after-tests"></td><td id="sum-after-runtime" class="mono"></td></tr>
     </tbody>
   </table>
   <div class="detail">Last updated: <span id="updated"></span></div>
 </section>
 
-<footer>Standalone page: no server, no internet, no external libraries. Edit <span class="mono">demo/results.js</span> and refresh. Reset with <span class="mono">./scripts/reset-demo.sh</span>.</footer>
+</main>
+
+<footer>Standalone page: no server, no internet, no external libraries. Carbon-style look implemented in inline CSS (IBM Plex used if installed, system fonts otherwise). Edit <span class="mono">demo/results.js</span> and refresh. Reset with <span class="mono">./scripts/reset-demo.sh</span>.</footer>
 
 <script>
 (function () {
