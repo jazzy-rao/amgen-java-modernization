@@ -4,7 +4,7 @@
 # What it restores (from the tag):   pom.xml, src/
 # What it also resets:               demo/results.js  <- demo/results.template.js
 #                                    target/          (Maven build output, deleted)
-# What it never touches:             .git, README.md, DEMO_GUIDE.md, demo/index.html, scripts/,
+# What it never touches:             .git, README.md, DEMO_GUIDE.md, DEMO_SCRIPT.md, demo/index.html, scripts/,
 #                                    and any other file. Nothing outside this project directory.
 # It never commits, never runs Maven/Bob, and never triggers a migration.
 set -euo pipefail
@@ -63,4 +63,4 @@ if [ -n "$OTHER" ]; then
   echo "Note: these other changes exist and were left untouched:"
   echo "$OTHER" | sed 's/^/  /'
 fi
-echo "Next: mvn clean verify   (see DEMO_GUIDE.md)"
+echo "Next: ./scripts/run-oracle17.sh   (builds + tests on Oracle JDK 17; see DEMO_GUIDE.md)"

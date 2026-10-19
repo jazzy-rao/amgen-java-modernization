@@ -1,7 +1,7 @@
 # Reset the demo project to the protected Git baseline (tag: demo-baseline).
 #
 # Restores: pom.xml, src/   Also resets: demo/results.js (from template), target/
-# Never touches: .git, README.md, DEMO_GUIDE.md, demo/index.html, scripts/, or anything outside this folder.
+# Never touches: .git, README.md, DEMO_GUIDE.md, DEMO_SCRIPT.md, demo/index.html, scripts/, or anything outside this folder.
 # Never commits, never runs Maven/Bob, never triggers a migration.
 $ErrorActionPreference = 'Stop'
 

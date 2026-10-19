@@ -67,6 +67,20 @@
   .note { display: flex; gap: 12px; margin: 0 0 16px; padding: 12px 16px; background: #edf5ff; border: 1px solid #d0e2ff; border-left: 3px solid var(--interactive); font-size: 14px; line-height: 20px; letter-spacing: .16px; color: var(--text); }
   .note .ico { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--interactive); color: #fff; font: 700 13px/20px var(--font); text-align: center; }
   .note p { margin: 0; }
+  .note.warn { background: #fcf4d6; border-color: #f1c21b; border-left-color: #f1c21b; }
+  .note.warn .ico { background: #684e00; }
+  .note.ok { background: #defbe6; border-color: #a7f0ba; border-left-color: #198038; }
+  .note.ok .ico { background: #198038; }
+
+  /* Outcome banner */
+  section.outcome { margin: 16px 0 0; background: var(--layer); border: 1px solid var(--border); border-left: 4px solid var(--border-strong); padding: 16px; }
+  section.outcome.passed { border-left-color: #198038; }
+  section.outcome.failed { border-left-color: var(--after); }
+  section.outcome.pending { border-left-color: #f1c21b; }
+  section.outcome h2 { margin: 0 0 4px; font-size: 20px; line-height: 28px; font-weight: 400; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  section.outcome p { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--text-secondary); }
+  section.outcome p.manual { color: var(--text); }
+  section.summary h3 { margin: 16px 0 4px; }
 
   /* Summary tile and data table */
   section.summary { margin: 0 0 24px; background: var(--layer); border: 1px solid var(--border); padding: 0 16px 16px; }
@@ -97,6 +111,12 @@
 </header>
 
 <main>
+
+<section class="outcome" id="outcome" aria-live="polite">
+  <h2><span id="outcome-title"></span><span id="outcome-badge"></span></h2>
+  <p id="outcome-facts"></p>
+  <p id="outcome-summary" class="manual"></p>
+</section>
 
 <div class="legend" role="list" aria-label="Label legend">
   <span role="listitem"><span class="kind">PLANNED</span> intended target, not a result</span>
@@ -151,7 +171,7 @@
       <div id="assess-summary" class="detail"></div>
 
       <h3>2. Identify compatibility concerns <span class="kind">FINDING</span></h3>
-      <div id="findings"></div>
+      <div id="findings-count" class="detail"></div>
 
       <h3>3. Assist with migration changes <span class="kind">CHANGE</span></h3>
       <div class="row"><span class="label">Changes</span><span id="changes-status"></span></div>
@@ -192,14 +212,24 @@
 <div class="note" role="note"><span class="ico" aria-hidden="true">i</span><p>Moving between Oracle JDK 17 and Red Hat build of OpenJDK 17 does not necessarily require source-code changes. The outcome shown here is whatever Bob's assessment and your validation actually recorded.</p></div>
 
 <section class="summary">
-  <h2>Files changed <span class="kind">CHANGE</span></h2>
+  <h2>Assessment findings <span class="kind">FINDING</span> <span id="assess-badge"></span></h2>
+  <div id="assess-summary2" class="detail"></div>
+  <div id="findings"></div>
+
+  <h2>Source and configuration changes <span class="kind">CHANGE</span> <span id="changes-badge"></span></h2>
+  <div id="changes-summary2" class="detail"></div>
   <div id="files"></div>
-  <h2>Latest validation summary <span class="kind">VERIFIED</span></h2>
+
+  <h2>Verified outcomes: before vs. after <span class="kind">VERIFIED</span></h2>
+  <div id="vendor-warning"></div>
   <table>
-    <thead><tr><th scope="col">Stage</th><th scope="col">Build</th><th scope="col">Tests</th><th scope="col">Runtime detected</th></tr></thead>
+    <thead><tr><th scope="col">Item</th><th scope="col">Before: Oracle JDK 17</th><th scope="col">After: Red Hat OpenJDK 17</th></tr></thead>
     <tbody>
-      <tr><th scope="row" style="background:none;font-weight:400">Before (Oracle JDK 17)</th><td id="sum-before-build"></td><td id="sum-before-tests"></td><td id="sum-before-runtime" class="mono"></td></tr>
-      <tr><th scope="row" style="background:none;font-weight:400">After (Red Hat OpenJDK 17)</th><td id="sum-after-build"></td><td id="sum-after-tests"></td><td id="sum-after-runtime" class="mono"></td></tr>
+      <tr><th scope="row" style="background:none;font-weight:400">Java runtime vendor</th><td id="cmp-before-vendor"></td><td id="cmp-after-vendor"></td></tr>
+      <tr><th scope="row" style="background:none;font-weight:400">Java version</th><td id="cmp-before-version"></td><td id="cmp-after-version"></td></tr>
+      <tr><th scope="row" style="background:none;font-weight:400"><span class="mono">java -version</span> (first line)</th><td id="cmp-before-runtime" class="mono"></td><td id="cmp-after-runtime" class="mono"></td></tr>
+      <tr><th scope="row" style="background:none;font-weight:400">Maven build (<span class="mono">mvn clean verify</span>)</th><td id="cmp-before-build"></td><td id="cmp-after-build"></td></tr>
+      <tr><th scope="row" style="background:none;font-weight:400">Unit tests</th><td id="cmp-before-tests"></td><td id="cmp-after-tests"></td></tr>
     </tbody>
   </table>
   <div class="detail">Last updated: <span id="updated"></span></div>
@@ -212,16 +242,17 @@
 <script>
 (function () {
   var R = window.DEMO_RESULTS || {};
-  var B = R.before || {}, A = R.after || {}, S = R.assessment || {}, C = R.changes || {};
+  var B = R.before || {}, A = R.after || {}, S = R.assessment || {}, C = R.changes || {}, O = R.outcome || {};
 
   var LABEL = { "not-run": "\u25CB Not yet run", "pending": "\u25D4 Pending verification",
                 "passed": "\u2713 Passed", "failed": "\u2715 Failed", "info": "\u2139 Info" };
+  var NOT_RECORDED = "Not yet recorded";
 
   // A "passed" claim needs a recorded detail; otherwise it is shown as pending verification.
   function norm(item) {
     item = item || {};
     var s = LABEL[item.status] ? item.status : "not-run";
-    if (s === "passed" && !String(item.detail || "").trim()) s = "pending";
+    if (s === "passed" && !String(item.detail || item.summary || "").trim()) s = "pending";
     return s;
   }
   function badge(s) {
@@ -234,59 +265,102 @@
     el.appendChild(typeof node === "string" ? document.createTextNode(node) : node);
   }
   function text(id, t, fallback) { put(id, String(t || "").trim() || fallback); }
-  function list(id, items, emptyText, render) {
+  function note(kind, msg) {
+    var n = document.createElement("div"); n.className = "note " + kind; n.setAttribute("role", "note");
+    var i = document.createElement("span"); i.className = "ico"; i.setAttribute("aria-hidden", "true"); i.textContent = kind === "warn" ? "!" : (kind === "ok" ? "\u2713" : "i");
+    var p = document.createElement("p"); p.textContent = msg;
+    n.appendChild(i); n.appendChild(p); return n;
+  }
+  function list(id, items, emptyNode, render) {
     var el = document.getElementById(id); el.textContent = "";
     if (!items || !items.length) {
-      var d = document.createElement("div"); d.className = "detail"; d.textContent = emptyText; el.appendChild(d); return;
+      if (typeof emptyNode === "string") { var d = document.createElement("div"); d.className = "detail"; d.textContent = emptyNode; el.appendChild(d); }
+      else el.appendChild(emptyNode);
+      return;
     }
     var ul = document.createElement("ul");
     items.forEach(function (it) { var li = document.createElement("li"); render(li, it); ul.appendChild(li); });
     el.appendChild(ul);
   }
+  function s(v) { return String(v || "").trim(); }
 
-  text("before-runtime", B.runtimeDetected, "Not yet captured");
-  text("after-runtime", A.runtimeDetected, "Not yet captured");
-  text("sum-before-runtime", B.runtimeDetected, "-");
-  text("sum-after-runtime", A.runtimeDetected, "-");
-
+  // ---- Runtime / vendor / version (only what was recorded; nothing is guessed) ----
   [["before", B], ["after", A]].forEach(function (p) {
+    text(p[0] + "-runtime", p[1].runtimeDetected, NOT_RECORDED);
+    text("cmp-" + p[0] + "-runtime", p[1].runtimeDetected, NOT_RECORDED);
+    text("cmp-" + p[0] + "-vendor", p[1].vendor, NOT_RECORDED);
+    text("cmp-" + p[0] + "-version", p[1].version, NOT_RECORDED);
     ["build", "tests"].forEach(function (k) {
-      var s = norm(p[1][k]);
-      put(p[0] + "-" + k, badge(s));
-      put("sum-" + p[0] + "-" + k, badge(s));
-      text(p[0] + "-" + k + "-detail", p[1][k] && p[1][k].detail, "");
+      var st = norm(p[1][k]);
+      put(p[0] + "-" + k, badge(st));
+      var cell = document.getElementById("cmp-" + p[0] + "-" + k); cell.textContent = "";
+      cell.appendChild(badge(st));
+      var d = s(p[1][k] && p[1][k].detail);
+      if (d) { var dd = document.createElement("div"); dd.className = "detail"; dd.textContent = d; cell.appendChild(dd); }
+      text(p[0] + "-" + k + "-detail", d, "");
     });
   });
 
-  var as = norm(S);
-  put("assess-status", badge(as));
+  // Warn (do not hide) if the recorded runtime is not the vendor this demo claims to compare.
+  var vw = document.getElementById("vendor-warning"); vw.textContent = "";
+  var bId = s(B.vendor) + " " + s(B.runtimeDetected), aId = s(A.vendor) + " " + s(A.runtimeDetected);
+  if (bId.trim() && !/oracle/i.test(bId)) vw.appendChild(note("warn", "The recorded 'before' runtime does not look like Oracle JDK. Compare vendors only as recorded here."));
+  if (aId.trim() && !/red\s*hat/i.test(aId)) vw.appendChild(note("warn", "The recorded 'after' runtime does not look like Red Hat build of OpenJDK. The target runtime may not have been used."));
+
+  // ---- Assessment findings ----
+  var as = norm(S), findings = S.findings || [];
+  put("assess-status", badge(as)); put("assess-badge", badge(as));
   text("assess-summary", S.summary, "No assessment recorded yet.");
-  list("findings", S.findings,
-       as === "not-run" ? "Nothing recorded yet." : "No concerns recorded.",
+  text("assess-summary2", S.summary, "No assessment recorded yet.");
+  text("findings-count", findings.length ? findings.length + (findings.length === 1 ? " finding recorded." : " findings recorded.")
+        : (as === "not-run" ? "Nothing recorded yet." : "No compatibility concerns recorded."), "");
+  list("findings", findings,
+       as === "not-run" ? "Nothing recorded yet." : note("ok", "Bob's assessment recorded no compatibility concerns."),
        function (li, t) { li.textContent = t; });
 
-  var cs = norm(C);
-  put("changes-status", badge(cs));
+  // ---- Source and configuration changes ----
+  var cs = norm(C), files = C.files || [];
+  var noChanges = !files.length && (cs === "info" || cs === "passed");
+  put("changes-status", badge(cs)); put("changes-badge", badge(cs));
   text("changes-summary", C.summary, "No changes recorded yet.");
-
-  var vs = (norm(A.build) === "passed" && norm(A.tests) === "passed") ? "passed"
-         : (norm(A.build) === "failed" || norm(A.tests) === "failed") ? "failed"
-         : (norm(A.build) === "not-run" && norm(A.tests) === "not-run") ? "not-run" : "pending";
-  put("validate-status", badge(vs));
-
-  var files = C.files || [];
-  list("files", files, "No file changes recorded.", function (li, f) {
+  text("changes-summary2", C.summary, cs === "not-run" ? "No changes recorded yet." : "");
+  list("files", files,
+       noChanges ? note("ok", "No code or configuration changes were identified as required. Nothing was modified.")
+                 : (cs === "not-run" ? "Not yet recorded." : "No file changes recorded."),
+       function (li, f) {
     var path = document.createElement("span"); path.className = "mono"; path.textContent = f.path || "";
     li.appendChild(path);
     if (f.note) li.appendChild(document.createTextNode(" \u2014 " + f.note));
+    if (f.reason) { var r = document.createElement("div"); r.className = "detail"; r.textContent = "Reason: " + f.reason; li.appendChild(r); }
   });
   list("after-config", files.filter(function (f) { return /pom\.xml|\.mvn|toolchains|settings/i.test(f.path || ""); }),
-       "No configuration changes recorded.", function (li, f) {
-    li.textContent = (f.path || "") + (f.note ? " \u2014 " + f.note : "");
-  });
+       noChanges ? "No configuration changes were required." : (cs === "not-run" ? "Not yet recorded." : "No configuration changes recorded."),
+       function (li, f) { li.textContent = (f.path || "") + (f.note ? " \u2014 " + f.note : ""); });
 
+  // ---- Validation ----
+  var ab = norm(A.build), at = norm(A.tests);
+  var vs = (ab === "passed" && at === "passed") ? "passed"
+         : (ab === "failed" || at === "failed") ? "failed"
+         : (ab === "not-run" && at === "not-run") ? "not-run" : "pending";
+  put("validate-status", badge(vs));
   list("followups", A.followUps, "None recorded.", function (li, t) { li.textContent = t; });
   text("updated", R.updated, "not recorded");
+
+  // ---- Outcome banner: derived only from recorded statuses ----
+  var targetOk = !aId.trim() || /red\s*hat/i.test(aId);
+  var state, title;
+  if (vs === "failed") { state = "failed"; title = "Validation failed on the target runtime"; }
+  else if (vs === "passed" && targetOk) { state = "passed"; title = "Validated: build and unit tests passed on the target runtime"; }
+  else if (vs === "passed") { state = "pending"; title = "Build and tests passed, but the recorded runtime is not Red Hat OpenJDK"; }
+  else if (as !== "not-run" || cs !== "not-run") { state = "pending"; title = "Assessment recorded: target validation pending"; }
+  else { state = "pending"; title = "Outcome not yet recorded"; }
+  document.getElementById("outcome").className = "outcome " + state;
+  text("outcome-title", title, "");
+  put("outcome-badge", badge(vs === "passed" && targetOk ? "passed" : vs === "failed" ? "failed" : vs === "not-run" && as === "not-run" ? "not-run" : "pending"));
+  text("outcome-facts",
+       "Assessment: " + LABEL[as] + "  |  Changes: " + (noChanges ? "None required" : LABEL[cs]) +
+       "  |  Target build: " + LABEL[ab] + "  |  Target tests: " + LABEL[at], "");
+  text("outcome-summary", O.summary, "");
 })();
 </script>
 </body>
