@@ -3,364 +3,560 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Java Modernization Demo - Oracle JDK to Red Hat OpenJDK</title>
+<title>Java Modernization — Oracle JDK 17 → Red Hat OpenJDK 17 | Amgen</title>
 <style>
-  /* Carbon-style visual language (white theme), implemented as inline CSS so the page stays fully offline.
-     Tokens follow Carbon's gray scale, blue-60 interactive color, 2px radius, 8px spacing scale. */
-  :root {
-    --layer-bg: #f4f4f4; --layer: #ffffff; --border: #e0e0e0; --border-strong: #8d8d8d;
-    --text: #161616; --text-secondary: #525252; --text-on-color: #ffffff;
-    --shell: #161616; --shell-text-secondary: #c6c6c6; --focus: #0f62fe; --interactive: #0f62fe;
-    --before: #ba4e00; --bob: #0f62fe; --after: #da1e28;
-    --tag-gray-bg: #e0e0e0;  --tag-gray-fg: #161616;
-    --tag-yellow-bg: #fcf4d6; --tag-yellow-fg: #684e00;
-    --tag-green-bg: #a7f0ba; --tag-green-fg: #044317;
-    --tag-red-bg: #ffd7d9;   --tag-red-fg: #750e13;
-    --tag-blue-bg: #d0e2ff;  --tag-blue-fg: #002d9c;
-    --font: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Helvetica, Arial, sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--layer-bg); color: var(--text); font: 400 16px/1.5 var(--font); letter-spacing: 0; }
+/* All CSS inline — no external assets, works fully offline. */
+:root {
+  --bg:       #f4f4f4;
+  --surface:  #ffffff;
+  --border:   #e0e0e0;
+  --border-strong: #8d8d8d;
+  --text:     #161616;
+  --muted:    #525252;
+  --on-dark:  #ffffff;
+  --shell-bg: #161616;
+  --shell-sub:#c6c6c6;
 
-  /* UI shell header */
-  .shell { background: var(--shell); color: var(--text-on-color); padding: 24px 32px 24px; border-bottom: 1px solid #393939; }
-  .shell .eyebrow { margin: 0 0 4px; font-size: 12px; line-height: 16px; letter-spacing: .32px; text-transform: uppercase; color: var(--shell-text-secondary); }
-  h1 { margin: 0; font-size: 28px; line-height: 36px; font-weight: 400; }
-  .sub { margin: 8px 0 0; color: var(--shell-text-secondary); font-size: 14px; line-height: 20px; letter-spacing: .16px; max-width: 960px; }
-  .sub .mono { color: var(--text-on-color); }
+  --accent:   #0f62fe;   /* IBM Blue 60 */
+  --green:    #198038;
+  --red:      #da1e28;
+  --orange:   #ba4e00;
+  --yellow:   #f1c21b;
+  --purple:   #6929c4;
 
-  main { max-width: 1584px; margin: 0 auto; padding: 0 32px; }
+  --tag-gray-bg:   #e0e0e0; --tag-gray-fg:   #161616;
+  --tag-green-bg:  #a7f0ba; --tag-green-fg:  #044317;
+  --tag-red-bg:    #ffd7d9; --tag-red-fg:    #750e13;
+  --tag-yellow-bg: #fcf4d6; --tag-yellow-fg: #684e00;
+  --tag-blue-bg:   #d0e2ff; --tag-blue-fg:   #002d9c;
+  --tag-purple-bg: #e8daff; --tag-purple-fg: #31135e;
 
-  /* Legend */
-  .legend { display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 16px 0 0; font-size: 14px; line-height: 20px; color: var(--text-secondary); }
-  .legend > span { display: inline-flex; align-items: center; gap: 8px; }
+  --font: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Helvetica, Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 2px;
+}
 
-  /* Three-column flow */
-  .flow { display: grid; grid-template-columns: 1fr 32px 1fr 32px 1fr; align-items: stretch; padding: 16px 0; }
-  .arrow { display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text-secondary); }
-  .col { background: var(--layer); border: 1px solid var(--border); border-top: 4px solid var(--border-strong); display: flex; flex-direction: column; }
-  .col.before { border-top-color: var(--before); }
-  .col.bob    { border-top-color: var(--bob); }
-  .col.after  { border-top-color: var(--after); }
-  .col > h2 { margin: 0; padding: 16px 16px 12px; font-size: 20px; line-height: 28px; font-weight: 400; border-bottom: 1px solid var(--border); }
-  .col .eyebrow { display: block; font-size: 12px; line-height: 16px; letter-spacing: .32px; text-transform: uppercase; color: var(--text-secondary); }
-  .body { padding: 0 16px 16px; }
-  h3 { margin: 24px 0 8px; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: .16px; color: var(--text); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  ul { margin: 4px 0; padding-left: 20px; } li { margin: 4px 0; }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-  .row:first-of-type { border-top: 1px solid var(--border); }
-  .row .label { font-weight: 600; }
-  .detail { color: var(--text-secondary); font-size: 14px; line-height: 20px; letter-spacing: .16px; margin: 4px 0 8px; word-break: break-word; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.6 var(--font); }
 
-  /* Tags: status (rounded) and kind (outline) */
-  .badge { display: inline-flex; align-items: center; white-space: nowrap; min-height: 24px; padding: 0 8px; border-radius: 24px; font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: .32px; }
-  .s-not-run { background: var(--tag-gray-bg);   color: var(--tag-gray-fg); }
-  .s-pending { background: var(--tag-yellow-bg); color: var(--tag-yellow-fg); }
-  .s-passed  { background: var(--tag-green-bg);  color: var(--tag-green-fg); }
-  .s-failed  { background: var(--tag-red-bg);    color: var(--tag-red-fg); }
-  .s-info    { background: var(--tag-blue-bg);   color: var(--tag-blue-fg); }
-  .kind { display: inline-flex; align-items: center; min-height: 20px; padding: 0 8px; border-radius: 24px; font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: .32px; background: var(--layer); color: var(--text-secondary); border: 1px solid var(--border-strong); }
-  .mono { font-family: var(--mono); font-size: 13px; }
+/* ── Shell header ─────────────────────────────────────────────────────────── */
+.shell { background: var(--shell-bg); color: var(--on-dark); padding: 20px 32px 24px; border-bottom: 1px solid #393939; }
+.shell .eyebrow { margin: 0 0 4px; font-size: 11px; letter-spacing: .48px; text-transform: uppercase; color: var(--shell-sub); }
+.shell h1 { margin: 0; font-size: 26px; line-height: 34px; font-weight: 300; }
+.shell .sub { margin: 6px 0 0; color: var(--shell-sub); font-size: 13px; }
 
-  /* Inline notification (information) */
-  .note { display: flex; gap: 12px; margin: 0 0 16px; padding: 12px 16px; background: #edf5ff; border: 1px solid #d0e2ff; border-left: 3px solid var(--interactive); font-size: 14px; line-height: 20px; letter-spacing: .16px; color: var(--text); }
-  .note .ico { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--interactive); color: #fff; font: 700 13px/20px var(--font); text-align: center; }
-  .note p { margin: 0; }
-  .note.warn { background: #fcf4d6; border-color: #f1c21b; border-left-color: #f1c21b; }
-  .note.warn .ico { background: #684e00; }
-  .note.ok { background: #defbe6; border-color: #a7f0ba; border-left-color: #198038; }
-  .note.ok .ico { background: #198038; }
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+main { max-width: 1200px; margin: 0 auto; padding: 0 32px 40px; }
 
-  /* Outcome banner */
-  section.outcome { margin: 16px 0 0; background: var(--layer); border: 1px solid var(--border); border-left: 4px solid var(--border-strong); padding: 16px; }
-  section.outcome.passed { border-left-color: #198038; }
-  section.outcome.failed { border-left-color: var(--after); }
-  section.outcome.pending { border-left-color: #f1c21b; }
-  section.outcome h2 { margin: 0 0 4px; font-size: 20px; line-height: 28px; font-weight: 400; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  section.outcome p { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--text-secondary); }
-  section.outcome p.manual { color: var(--text); }
-  section.summary h3 { margin: 16px 0 4px; }
+/* ── Section titles ───────────────────────────────────────────────────────── */
+.section-head { display: flex; align-items: baseline; gap: 10px; margin: 32px 0 16px; }
+.section-head h2 { margin: 0; font-size: 18px; font-weight: 400; }
+.section-head .tag { font-size: 11px; }
 
-  /* Summary tile and data table */
-  section.summary { margin: 0 0 24px; background: var(--layer); border: 1px solid var(--border); padding: 0 16px 16px; }
-  section.summary h2 { margin: 24px 0 8px; font-size: 20px; line-height: 28px; font-weight: 400; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px; letter-spacing: .16px; }
-  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  th { background: var(--layer-bg); color: var(--text); font-size: 14px; font-weight: 600; }
-  tbody tr:hover { background: #e8e8e8; }
+/* ── Outcome banner ───────────────────────────────────────────────────────── */
+#outcome-banner { margin: 24px 0 0; padding: 14px 20px; border: 1px solid var(--border); border-left: 4px solid var(--border-strong); background: var(--surface); display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+#outcome-banner.passed  { border-left-color: var(--green); }
+#outcome-banner.failed  { border-left-color: var(--red); }
+#outcome-banner.pending { border-left-color: var(--yellow); }
+#outcome-banner .title  { font-size: 15px; font-weight: 400; flex: 1 1 auto; }
+#outcome-banner .facts  { font-size: 13px; color: var(--muted); flex-basis: 100%; }
 
-  footer { max-width: 1584px; margin: 0 auto; padding: 0 32px 32px; color: var(--text-secondary); font-size: 12px; line-height: 16px; letter-spacing: .32px; }
+/* ── A. Journey strip ─────────────────────────────────────────────────────── */
+.journey { display: flex; align-items: stretch; gap: 0; background: var(--surface); border: 1px solid var(--border); }
+.j-node { flex: 1; padding: 20px 16px 16px; border-right: 1px solid var(--border); position: relative; }
+.j-node:last-child { border-right: none; }
+.j-node .j-label { font-size: 11px; letter-spacing: .48px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.j-node .j-title { font-size: 15px; font-weight: 400; margin: 0 0 8px; }
+.j-node .j-steps { list-style: none; margin: 0; padding: 0; font-size: 13px; color: var(--muted); }
+.j-node .j-steps li { padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+.j-node .j-steps li::before { content: ""; display: block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.j-node.env  .j-steps li::before { background: var(--orange); }
+.j-node.bob  .j-steps li::before { background: var(--accent); }
+.j-node.env2 .j-steps li::before { background: var(--green); }
+.j-arrow { display: flex; align-items: center; padding: 0 8px; color: var(--border-strong); font-size: 22px; flex-shrink: 0; }
+.j-node.env  { border-top: 3px solid var(--orange); }
+.j-node.bob  { border-top: 3px solid var(--accent); }
+.j-node.env2 { border-top: 3px solid var(--green); }
 
-  @media (max-width: 1100px) {
-    .flow { grid-template-columns: 1fr; }
-    .arrow { transform: rotate(90deg); height: 40px; }
-    .shell, main, footer { padding-left: 16px; padding-right: 16px; }
-    main { padding-top: 0; }
-  }
-  @media print { body { background: #fff; } .shell { background: #fff; color: #161616; border-bottom: 1px solid #161616; } .sub, .shell .eyebrow, .sub .mono { color: #525252; } }
+/* ── B. Before / After panels ─────────────────────────────────────────────── */
+.ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ba-panel { background: var(--surface); border: 1px solid var(--border); }
+.ba-panel .panel-head { padding: 14px 18px 10px; border-bottom: 1px solid var(--border); }
+.ba-panel .panel-head .eyebrow { font-size: 11px; letter-spacing: .48px; text-transform: uppercase; color: var(--muted); }
+.ba-panel .panel-head h3 { margin: 2px 0 0; font-size: 16px; font-weight: 400; }
+.ba-panel.before .panel-head { border-top: 3px solid var(--orange); }
+.ba-panel.after  .panel-head { border-top: 3px solid var(--green); }
+.ba-panel .panel-body { padding: 14px 18px 18px; }
+.metric-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.metric-row:last-child { border-bottom: none; }
+.metric-row .label { color: var(--muted); }
+.metric-row .value { font-family: var(--mono); font-size: 13px; text-align: right; word-break: break-all; }
+
+/* ── C. Changes table ─────────────────────────────────────────────────────── */
+.changes-block { background: var(--surface); border: 1px solid var(--border); padding: 18px; }
+.changes-block .empty-note { color: var(--muted); font-size: 14px; }
+table.changes { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.changes th { text-align: left; padding: 8px 12px; background: var(--bg); font-size: 13px; font-weight: 600; border-bottom: 2px solid var(--border); }
+table.changes td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.changes tbody tr:last-child td { border-bottom: none; }
+table.changes .mono { font-family: var(--mono); font-size: 12px; }
+
+/* ── D. Impact summary ────────────────────────────────────────────────────── */
+.impact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.impact-card { background: var(--surface); border: 1px solid var(--border); padding: 16px 18px; }
+.impact-card .ic-label { font-size: 11px; letter-spacing: .48px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.impact-card .ic-value { font-size: 14px; line-height: 1.5; }
+.impact-card.highlight { border-left: 3px solid var(--accent); }
+
+/* ── E. Evidence strip ────────────────────────────────────────────────────── */
+.evidence { background: var(--surface); border: 1px solid var(--border); padding: 16px 18px; font-size: 13px; }
+.evidence .ev-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.evidence .ev-row:last-child { border-bottom: none; }
+.evidence .ev-key { color: var(--muted); min-width: 130px; }
+.evidence .ev-val { font-family: var(--mono); word-break: break-all; }
+
+/* ── Shared components ────────────────────────────────────────────────────── */
+.badge { display: inline-flex; align-items: center; min-height: 22px; padding: 0 9px; border-radius: 24px; font-size: 11px; letter-spacing: .32px; font-weight: 400; white-space: nowrap; }
+.s-not-run  { background: var(--tag-gray-bg);   color: var(--tag-gray-fg); }
+.s-pending  { background: var(--tag-yellow-bg); color: var(--tag-yellow-fg); }
+.s-passed   { background: var(--tag-green-bg);  color: var(--tag-green-fg); }
+.s-failed   { background: var(--tag-red-bg);    color: var(--tag-red-fg); }
+.s-info     { background: var(--tag-blue-bg);   color: var(--tag-blue-fg); }
+.s-verified { background: var(--tag-purple-bg); color: var(--tag-purple-fg); }
+
+.tag { display: inline-flex; align-items: center; min-height: 20px; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 24px; font-size: 11px; color: var(--muted); letter-spacing: .32px; }
+
+.inline-note { display: flex; gap: 10px; margin: 12px 0; padding: 10px 14px; font-size: 13px; line-height: 1.5; border: 1px solid; border-radius: var(--r); }
+.inline-note.info   { background: #edf5ff; border-color: #d0e2ff; border-left: 3px solid var(--accent); }
+.inline-note.ok     { background: #defbe6; border-color: #a7f0ba; border-left: 3px solid var(--green); }
+.inline-note.warn   { background: #fcf4d6; border-color: #f1c21b; border-left: 3px solid var(--yellow); }
+.inline-note.danger { background: #fff1f1; border-color: #ffd7d9; border-left: 3px solid var(--red); }
+.inline-note .ico { flex: none; width: 18px; height: 18px; border-radius: 50%; font: 700 11px/18px var(--font); text-align: center; color: #fff; margin-top: 1px; }
+.inline-note.info   .ico { background: var(--accent); }
+.inline-note.ok     .ico { background: var(--green); }
+.inline-note.warn   .ico { background: #684e00; }
+.inline-note.danger .ico { background: var(--red); }
+
+.findings-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.findings-list li { padding: 8px 12px; border-left: 3px solid var(--accent); margin-bottom: 8px; background: #f4f8ff; font-size: 14px; line-height: 1.5; }
+
+footer { max-width: 1200px; margin: 0 auto; padding: 0 32px 32px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); padding-top: 16px; }
+
+@media (max-width: 900px) {
+  .ba-grid, .impact-grid { grid-template-columns: 1fr; }
+  .journey { flex-direction: column; }
+  .j-arrow { transform: rotate(90deg); align-self: flex-start; padding: 4px 20px; }
+  main, .shell { padding-left: 16px; padding-right: 16px; }
+}
 </style>
 <script src="results.js"></script>
 </head>
 <body>
 
 <header class="shell">
-  <p class="eyebrow">Amgen &middot; Lab Sample Tracker &middot; Java 17</p>
-  <h1>Java Modernization: Oracle JDK 17 &rarr; IBM Bob &rarr; Red Hat OpenJDK 17</h1>
-  <p class="sub">Fictional, synthetic data. Results shown here come only from <span class="mono">demo/results.js</span>, which is edited by hand.</p>
+  <p class="eyebrow">Amgen &middot; Lab Sample Tracker &middot; Java Modernization</p>
+  <h1>Oracle JDK 17 &rarr; IBM Bob &rarr; Red Hat OpenJDK 17</h1>
+  <p class="sub">Synthetic demo data &middot; All results sourced from <code>demo/results.js</code> — edited by hand from actual runs &middot; Nothing is pre-populated</p>
 </header>
 
 <main>
 
-<section class="outcome" id="outcome" aria-live="polite">
-  <h2><span id="outcome-title"></span><span id="outcome-badge"></span></h2>
-  <p id="outcome-facts"></p>
-  <p id="outcome-summary" class="manual"></p>
-</section>
-
-<div class="legend" role="list" aria-label="Label legend">
-  <span role="listitem"><span class="kind">PLANNED</span> intended target, not a result</span>
-  <span role="listitem"><span class="kind">FINDING</span> reported by Bob's assessment</span>
-  <span role="listitem"><span class="kind">CHANGE</span> actually applied to the project</span>
-  <span role="listitem"><span class="kind">VERIFIED</span> real build/test run</span>
+<!-- Outcome banner -->
+<div id="outcome-banner" class="pending" role="status" aria-live="polite">
+  <span class="title" id="ob-title">Outcome not yet recorded</span>
+  <span id="ob-badge"></span>
+  <span class="facts" id="ob-facts"></span>
 </div>
 
-<div class="flow">
+<!-- ── A. The migration journey ────────────────────────────────────────────── -->
+<div class="section-head">
+  <h2>A. The migration journey</h2>
+  <span class="tag">workflow</span>
+</div>
 
-  <!-- LEFT -->
-  <article class="col before">
-    <h2><span class="eyebrow">Before</span>Oracle JDK 17</h2>
-    <div class="body">
-      <h3>Java runtime <span class="kind">PLANNED</span></h3>
-      <div>Baseline runtime: Oracle JDK 17</div>
-      <div class="detail">Detected: <span id="before-runtime" class="mono"></span></div>
+<div class="journey" role="region" aria-label="Migration journey">
+  <div class="j-node env">
+    <div class="j-label">Starting point</div>
+    <div class="j-title">Oracle JDK 17</div>
+    <ul class="j-steps">
+      <li>Existing Java 17 application</li>
+      <li>Maven build + 8 JUnit 5 tests</li>
+      <li>Oracle JDK 17 runtime</li>
+    </ul>
+  </div>
+  <div class="j-arrow" aria-hidden="true">&#8594;</div>
+  <div class="j-node bob">
+    <div class="j-label">IBM Bob assists</div>
+    <div class="j-title">Java Modernization Workflow</div>
+    <ul class="j-steps">
+      <li>1 &mdash; Assess project and dependencies</li>
+      <li>2 &mdash; Identify compatibility concerns</li>
+      <li>3 &mdash; Assist with required changes</li>
+      <li>4 &mdash; Validate result on target runtime</li>
+    </ul>
+  </div>
+  <div class="j-arrow" aria-hidden="true">&#8594;</div>
+  <div class="j-node env2">
+    <div class="j-label">Target environment</div>
+    <div class="j-title">Red Hat OpenJDK 17</div>
+    <ul class="j-steps">
+      <li>RHEL 9.6 on IBM Cloud VPC VM</li>
+      <li>Red Hat, Inc. build of OpenJDK 17</li>
+      <li>Same source, same tests</li>
+    </ul>
+  </div>
+</div>
 
-      <h3>Project &amp; build configuration</h3>
-      <ul>
-        <li>Maven project, Java 17 (<span class="mono">java.version</span> in <span class="mono">pom.xml</span>)</li>
-        <li>Compiler <span class="mono">release</span> = 17</li>
-        <li>JUnit Jupiter 5.10.2 (test scope only)</li>
-        <li>Plain Java, no runtime dependencies</li>
-      </ul>
+<!-- ── B. Before / After comparison ────────────────────────────────────────── -->
+<div class="section-head">
+  <h2>B. Before &amp; after comparison</h2>
+  <span class="tag">verified</span>
+</div>
 
-      <h3>Baseline results <span class="kind">VERIFIED</span></h3>
-      <div class="row"><span class="label">Build</span><span id="before-build"></span></div>
-      <div id="before-build-detail" class="detail"></div>
-      <div class="row"><span class="label">Tests</span><span id="before-tests"></span></div>
-      <div id="before-tests-detail" class="detail"></div>
+<div id="vendor-warning"></div>
 
-      <h3>Areas to assess <span class="kind">PLANNED</span></h3>
-      <div class="detail">Checklist of what to look at. These are not findings.</div>
-      <ul>
-        <li>Vendor-specific or internal JDK APIs in source</li>
-        <li>JVM flags in scripts or launch configuration</li>
-        <li>JAVA_HOME / Maven toolchain / CI settings</li>
-        <li>Container images or docs naming Oracle JDK</li>
-      </ul>
+<div class="ba-grid">
+
+  <div class="ba-panel before">
+    <div class="panel-head">
+      <div class="eyebrow">Before</div>
+      <h3>Oracle JDK 17</h3>
     </div>
-  </article>
-
-  <div class="arrow" aria-hidden="true">&rarr;</div>
-
-  <!-- CENTER -->
-  <article class="col bob">
-    <h2><span class="eyebrow">Assist</span>IBM Bob</h2>
-    <div class="body">
-      <h3>1. Assess the project</h3>
-      <div class="row"><span class="label">Assessment</span><span id="assess-status"></span></div>
-      <div id="assess-summary" class="detail"></div>
-
-      <h3>2. Identify compatibility concerns <span class="kind">FINDING</span></h3>
-      <div id="findings-count" class="detail"></div>
-
-      <h3>3. Assist with migration changes <span class="kind">CHANGE</span></h3>
-      <div class="row"><span class="label">Changes</span><span id="changes-status"></span></div>
-      <div id="changes-summary" class="detail"></div>
-
-      <h3>4. Validate the result <span class="kind">VERIFIED</span></h3>
-      <div class="row"><span class="label">Target build + tests</span><span id="validate-status"></span></div>
-      <div class="detail">Shown as Passed only when both target build and tests are recorded as passed.</div>
+    <div class="panel-body">
+      <div class="metric-row"><span class="label">Java vendor</span><span class="value" id="b-vendor">—</span></div>
+      <div class="metric-row"><span class="label">Java version</span><span class="value" id="b-version">—</span></div>
+      <div class="metric-row"><span class="label"><code>java -version</code></span><span class="value" id="b-runtime">—</span></div>
+      <div class="metric-row"><span class="label">Build</span><span id="b-build"></span></div>
+      <div class="metric-row"><span class="label">Tests</span><span id="b-tests"></span></div>
     </div>
-  </article>
+  </div>
 
-  <div class="arrow" aria-hidden="true">&rarr;</div>
-
-  <!-- RIGHT -->
-  <article class="col after">
-    <h2><span class="eyebrow">After</span>Red Hat OpenJDK 17</h2>
-    <div class="body">
-      <h3>Java runtime <span class="kind">PLANNED</span></h3>
-      <div>Target runtime: Red Hat build of OpenJDK 17</div>
-      <div class="detail">Detected: <span id="after-runtime" class="mono"></span></div>
-
-      <h3>Updated configuration <span class="kind">CHANGE</span></h3>
-      <div id="after-config" class="detail"></div>
-
-      <h3>Target results <span class="kind">VERIFIED</span></h3>
-      <div class="row"><span class="label">Build</span><span id="after-build"></span></div>
-      <div id="after-build-detail" class="detail"></div>
-      <div class="row"><span class="label">Tests</span><span id="after-tests"></span></div>
-      <div id="after-tests-detail" class="detail"></div>
-
-      <h3>Remaining issues / follow-up</h3>
-      <div id="followups"></div>
+  <div class="ba-panel after">
+    <div class="panel-head">
+      <div class="eyebrow">After</div>
+      <h3>Red Hat OpenJDK 17 on RHEL 9.6</h3>
     </div>
-  </article>
+    <div class="panel-body">
+      <div class="metric-row"><span class="label">Java vendor</span><span class="value" id="a-vendor">—</span></div>
+      <div class="metric-row"><span class="label">Java version</span><span class="value" id="a-version">—</span></div>
+      <div class="metric-row"><span class="label"><code>java -version</code></span><span class="value" id="a-runtime">—</span></div>
+      <div class="metric-row"><span class="label">Build</span><span id="a-build"></span></div>
+      <div class="metric-row"><span class="label">Tests</span><span id="a-tests"></span></div>
+      <div class="metric-row"><span class="label">App startup</span><span id="a-app"></span></div>
+    </div>
+  </div>
 
 </div>
 
-<div class="note" role="note"><span class="ico" aria-hidden="true">i</span><p>Moving between Oracle JDK 17 and Red Hat build of OpenJDK 17 does not necessarily require source-code changes. The outcome shown here is whatever Bob's assessment and your validation actually recorded.</p></div>
+<!-- ── C. What changed and why ─────────────────────────────────────────────── -->
+<div class="section-head">
+  <h2>C. What changed and why</h2>
+  <span class="tag">change</span>
+  <span id="changes-badge"></span>
+</div>
 
-<section class="summary">
-  <h2>Assessment findings <span class="kind">FINDING</span> <span id="assess-badge"></span></h2>
-  <div id="assess-summary2" class="detail"></div>
-  <div id="findings"></div>
+<div class="changes-block">
+  <div id="assess-summary-block"></div>
+  <div id="changes-summary-block"></div>
+  <div id="findings-area"></div>
+  <div id="files-area"></div>
+</div>
 
-  <h2>Source and configuration changes <span class="kind">CHANGE</span> <span id="changes-badge"></span></h2>
-  <div id="changes-summary2" class="detail"></div>
-  <div id="files"></div>
+<!-- ── D. Impact summary ────────────────────────────────────────────────────── -->
+<div class="section-head">
+  <h2>D. Impact summary</h2>
+  <span class="tag">non-developer view</span>
+</div>
 
-  <h2>Verified outcomes: before vs. after <span class="kind">VERIFIED</span></h2>
-  <div id="vendor-warning"></div>
-  <table>
-    <thead><tr><th scope="col">Item</th><th scope="col">Before: Oracle JDK 17</th><th scope="col">After: Red Hat OpenJDK 17</th></tr></thead>
-    <tbody>
-      <tr><th scope="row" style="background:none;font-weight:400">Java runtime vendor</th><td id="cmp-before-vendor"></td><td id="cmp-after-vendor"></td></tr>
-      <tr><th scope="row" style="background:none;font-weight:400">Java version</th><td id="cmp-before-version"></td><td id="cmp-after-version"></td></tr>
-      <tr><th scope="row" style="background:none;font-weight:400"><span class="mono">java -version</span> (first line)</th><td id="cmp-before-runtime" class="mono"></td><td id="cmp-after-runtime" class="mono"></td></tr>
-      <tr><th scope="row" style="background:none;font-weight:400">Maven build (<span class="mono">mvn clean verify</span>)</th><td id="cmp-before-build"></td><td id="cmp-after-build"></td></tr>
-      <tr><th scope="row" style="background:none;font-weight:400">Unit tests</th><td id="cmp-before-tests"></td><td id="cmp-after-tests"></td></tr>
-    </tbody>
-  </table>
-  <div class="detail">Last updated: <span id="updated"></span></div>
-</section>
+<div class="impact-grid" id="impact-grid">
+  <!-- populated by JS -->
+</div>
+
+<!-- ── E. Evidence and status ──────────────────────────────────────────────── -->
+<div class="section-head">
+  <h2>E. Evidence and status</h2>
+  <span class="tag">audit trail</span>
+</div>
+
+<div class="evidence" id="evidence-strip">
+  <!-- populated by JS -->
+</div>
+
+<div class="inline-note info" style="margin-top:16px">
+  <span class="ico" aria-hidden="true">i</span>
+  <span>Moving between Oracle JDK 17 and Red Hat build of OpenJDK 17 is a vendor change at the same Java version. It does not necessarily require source-code changes. The application uses only standard Java APIs; the outcome reflects what Bob&rsquo;s assessment and the actual validation recorded.</span>
+</div>
 
 </main>
 
-<footer>Standalone page: no server, no internet, no external libraries. Carbon-style look implemented in inline CSS (IBM Plex used if installed, system fonts otherwise). Edit <span class="mono">demo/results.js</span> and refresh. Reset with <span class="mono">./scripts/reset-demo.sh</span>.</footer>
+<footer>
+  Standalone page &mdash; no server, no internet, no external libraries. Edit <code>demo/results.js</code> and refresh.
+  Run <code>./scripts/reset-demo.sh</code> to clear results. Run <code>./scripts/capture-baseline.sh</code> for Oracle baseline evidence.
+  Run <code>./scripts/validate-rhel.sh</code> on the RHEL VM for target evidence.
+</footer>
 
 <script>
 (function () {
   var R = window.DEMO_RESULTS || {};
   var B = R.before || {}, A = R.after || {}, S = R.assessment || {}, C = R.changes || {}, O = R.outcome || {};
 
-  var LABEL = { "not-run": "\u25CB Not yet run", "pending": "\u25D4 Pending verification",
-                "passed": "\u2713 Passed", "failed": "\u2715 Failed", "info": "\u2139 Info" };
-  var NOT_RECORDED = "Not yet recorded";
+  var LABELS = {
+    "not-run": "\u25CB Not yet run",
+    "pending": "\u25D4 Pending",
+    "passed":  "\u2713 Passed",
+    "failed":  "\u2715 Failed",
+    "info":    "\u2139 Info"
+  };
+  var NR = "Not yet verified";
 
-  // A "passed" claim needs a recorded detail; otherwise it is shown as pending verification.
   function norm(item) {
     item = item || {};
-    var s = LABEL[item.status] ? item.status : "not-run";
+    var s = LABELS[item.status] ? item.status : "not-run";
     if (s === "passed" && !String(item.detail || item.summary || "").trim()) s = "pending";
     return s;
   }
   function badge(s) {
-    var b = document.createElement("span");
-    b.className = "badge s-" + s; b.textContent = LABEL[s];
-    return b;
+    var el = document.createElement("span");
+    el.className = "badge s-" + s;
+    el.textContent = LABELS[s] || s;
+    return el;
   }
-  function put(id, node) {
-    var el = document.getElementById(id); el.textContent = "";
-    el.appendChild(typeof node === "string" ? document.createTextNode(node) : node);
+  function setText(id, val, fb) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = String(val || "").trim() || fb || NR;
   }
-  function text(id, t, fallback) { put(id, String(t || "").trim() || fallback); }
-  function note(kind, msg) {
-    var n = document.createElement("div"); n.className = "note " + kind; n.setAttribute("role", "note");
-    var i = document.createElement("span"); i.className = "ico"; i.setAttribute("aria-hidden", "true"); i.textContent = kind === "warn" ? "!" : (kind === "ok" ? "\u2713" : "i");
-    var p = document.createElement("p"); p.textContent = msg;
-    n.appendChild(i); n.appendChild(p); return n;
-  }
-  function list(id, items, emptyNode, render) {
-    var el = document.getElementById(id); el.textContent = "";
-    if (!items || !items.length) {
-      if (typeof emptyNode === "string") { var d = document.createElement("div"); d.className = "detail"; d.textContent = emptyNode; el.appendChild(d); }
-      else el.appendChild(emptyNode);
-      return;
-    }
-    var ul = document.createElement("ul");
-    items.forEach(function (it) { var li = document.createElement("li"); render(li, it); ul.appendChild(li); });
-    el.appendChild(ul);
+  function setNode(id, node) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = "";
+    el.appendChild(node);
   }
   function s(v) { return String(v || "").trim(); }
 
-  // ---- Runtime / vendor / version (only what was recorded; nothing is guessed) ----
-  [["before", B], ["after", A]].forEach(function (p) {
-    text(p[0] + "-runtime", p[1].runtimeDetected, NOT_RECORDED);
-    text("cmp-" + p[0] + "-runtime", p[1].runtimeDetected, NOT_RECORDED);
-    text("cmp-" + p[0] + "-vendor", p[1].vendor, NOT_RECORDED);
-    text("cmp-" + p[0] + "-version", p[1].version, NOT_RECORDED);
+  function noteEl(kind, text) {
+    var d = document.createElement("div");
+    d.className = "inline-note " + kind;
+    d.setAttribute("role", "note");
+    var ico = document.createElement("span");
+    ico.className = "ico"; ico.setAttribute("aria-hidden", "true");
+    ico.textContent = kind === "warn" ? "!" : kind === "ok" ? "\u2713" : kind === "danger" ? "\u2715" : "i";
+    var t = document.createElement("span"); t.textContent = text;
+    d.appendChild(ico); d.appendChild(t);
+    return d;
+  }
+
+  /* ── B. Before / After ─────────────────────────────────────────────────── */
+  function fillSide(prefix, data) {
+    setText(prefix + "-vendor",  data.vendor,          NR);
+    setText(prefix + "-version", data.version,         NR);
+    setText(prefix + "-runtime", data.runtimeDetected, NR);
     ["build", "tests"].forEach(function (k) {
-      var st = norm(p[1][k]);
-      put(p[0] + "-" + k, badge(st));
-      var cell = document.getElementById("cmp-" + p[0] + "-" + k); cell.textContent = "";
-      cell.appendChild(badge(st));
-      var d = s(p[1][k] && p[1][k].detail);
-      if (d) { var dd = document.createElement("div"); dd.className = "detail"; dd.textContent = d; cell.appendChild(dd); }
-      text(p[0] + "-" + k + "-detail", d, "");
+      var st = norm(data[k]);
+      setNode(prefix + "-" + k, badge(st));
     });
-  });
+    if (prefix === "a") {
+      var appSt = norm(data.appRun);
+      setNode("a-app", badge(appSt));
+    }
+  }
+  fillSide("b", B);
+  fillSide("a", A);
 
-  // Warn (do not hide) if the recorded runtime is not the vendor this demo claims to compare.
-  var vw = document.getElementById("vendor-warning"); vw.textContent = "";
-  var bId = s(B.vendor) + " " + s(B.runtimeDetected), aId = s(A.vendor) + " " + s(A.runtimeDetected);
-  if (bId.trim() && !/oracle/i.test(bId)) vw.appendChild(note("warn", "The recorded 'before' runtime does not look like Oracle JDK. Compare vendors only as recorded here."));
-  if (aId.trim() && !/red\s*hat/i.test(aId)) vw.appendChild(note("warn", "The recorded 'after' runtime does not look like Red Hat build of OpenJDK. The target runtime may not have been used."));
+  // Vendor validation warnings
+  var vw = document.getElementById("vendor-warning");
+  var bStr = s(B.vendor) + " " + s(B.runtimeDetected);
+  var aStr = s(A.vendor) + " " + s(A.runtimeDetected);
+  if (bStr.trim() && !/oracle/i.test(bStr))
+    vw.appendChild(noteEl("warn", "The 'Before' runtime recorded is not Oracle JDK. Verify JAVA_HOME before claiming the Oracle baseline."));
+  if (aStr.trim() && !/red\s*hat/i.test(aStr))
+    vw.appendChild(noteEl("warn", "The 'After' runtime recorded does not look like Red Hat build of OpenJDK. Verify the RHEL VM before presenting."));
 
-  // ---- Assessment findings ----
-  var as = norm(S), findings = S.findings || [];
-  put("assess-status", badge(as)); put("assess-badge", badge(as));
-  text("assess-summary", S.summary, "No assessment recorded yet.");
-  text("assess-summary2", S.summary, "No assessment recorded yet.");
-  text("findings-count", findings.length ? findings.length + (findings.length === 1 ? " finding recorded." : " findings recorded.")
-        : (as === "not-run" ? "Nothing recorded yet." : "No compatibility concerns recorded."), "");
-  list("findings", findings,
-       as === "not-run" ? "Nothing recorded yet." : note("ok", "Bob's assessment recorded no compatibility concerns."),
-       function (li, t) { li.textContent = t; });
+  /* ── C. Changes ────────────────────────────────────────────────────────── */
+  var cs = norm(C), findings = S.findings || [], files = C.files || [];
+  setNode("changes-badge", badge(norm(S)));
 
-  // ---- Source and configuration changes ----
-  var cs = norm(C), files = C.files || [];
+  var cb = document.getElementById("changes-summary-block");
+  cb.textContent = "";
+
+  // Assessment summary
+  var as = norm(S);
+  var asBlock = document.getElementById("assess-summary-block");
+  asBlock.textContent = "";
+  if (s(S.summary)) {
+    var p = document.createElement("p");
+    p.style.cssText = "font-size:14px;margin:0 0 12px;color:#525252";
+    p.textContent = "Bob\u2019s assessment: " + s(S.summary);
+    asBlock.appendChild(p);
+  } else if (as === "not-run") {
+    asBlock.appendChild(noteEl("info", "IBM Bob assessment not yet run. Start the Java Modernization workflow in Bob and record the result in demo/results.js."));
+  }
+
+  // Findings
+  var fa = document.getElementById("findings-area");
+  fa.textContent = "";
+  if (findings.length) {
+    var ftitle = document.createElement("p");
+    ftitle.style.cssText = "font-weight:600;font-size:13px;margin:0 0 4px;text-transform:uppercase;letter-spacing:.32px;color:#525252";
+    ftitle.textContent = findings.length + (findings.length === 1 ? " finding" : " findings") + " from assessment";
+    fa.appendChild(ftitle);
+    var ul = document.createElement("ul"); ul.className = "findings-list";
+    findings.forEach(function (f) { var li = document.createElement("li"); li.textContent = f; ul.appendChild(li); });
+    fa.appendChild(ul);
+  } else if (as !== "not-run") {
+    fa.appendChild(noteEl("ok", "Bob\u2019s assessment recorded no compatibility concerns for this application."));
+  }
+
+  // Changes
+  var filesArea = document.getElementById("files-area");
+  filesArea.textContent = "";
   var noChanges = !files.length && (cs === "info" || cs === "passed");
-  put("changes-status", badge(cs)); put("changes-badge", badge(cs));
-  text("changes-summary", C.summary, "No changes recorded yet.");
-  text("changes-summary2", C.summary, cs === "not-run" ? "No changes recorded yet." : "");
-  list("files", files,
-       noChanges ? note("ok", "No code or configuration changes were identified as required. Nothing was modified.")
-                 : (cs === "not-run" ? "Not yet recorded." : "No file changes recorded."),
-       function (li, f) {
-    var path = document.createElement("span"); path.className = "mono"; path.textContent = f.path || "";
-    li.appendChild(path);
-    if (f.note) li.appendChild(document.createTextNode(" \u2014 " + f.note));
-    if (f.reason) { var r = document.createElement("div"); r.className = "detail"; r.textContent = "Reason: " + f.reason; li.appendChild(r); }
-  });
-  list("after-config", files.filter(function (f) { return /pom\.xml|\.mvn|toolchains|settings/i.test(f.path || ""); }),
-       noChanges ? "No configuration changes were required." : (cs === "not-run" ? "Not yet recorded." : "No configuration changes recorded."),
-       function (li, f) { li.textContent = (f.path || "") + (f.note ? " \u2014 " + f.note : ""); });
+  if (s(C.summary)) {
+    var sp = document.createElement("p");
+    sp.style.cssText = "font-size:14px;margin:12px 0 8px;";
+    sp.textContent = s(C.summary);
+    filesArea.appendChild(sp);
+  }
+  if (noChanges) {
+    filesArea.appendChild(noteEl("ok", "No source code or configuration changes were identified as required. The application uses only standard Java APIs."));
+  } else if (files.length) {
+    var tbl = document.createElement("table"); tbl.className = "changes";
+    var thead = document.createElement("thead");
+    thead.innerHTML = "<tr><th>File</th><th>What changed</th><th>Why</th><th>Bob assisted</th></tr>";
+    tbl.appendChild(thead);
+    var tbody = document.createElement("tbody");
+    files.forEach(function (f) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td class=\"mono\">" + esc(f.path || "") + "</td>" +
+        "<td>" + esc(f.note || "") + "</td>" +
+        "<td>" + esc(f.reason || "") + "</td>" +
+        "<td>" + esc(f.bobAssisted === false ? "No" : f.bobAssisted === true ? "Yes" : f.bobAssisted || "—") + "</td>";
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    filesArea.appendChild(tbl);
+  } else if (cs === "not-run") {
+    var np = document.createElement("p"); np.className = "empty-note";
+    np.textContent = "Changes not yet reviewed. Run Bob\u2019s assessment and record the result.";
+    filesArea.appendChild(np);
+  }
 
-  // ---- Validation ----
+  function esc(str) {
+    return String(str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  /* ── D. Impact summary ─────────────────────────────────────────────────── */
   var ab = norm(A.build), at = norm(A.tests);
   var vs = (ab === "passed" && at === "passed") ? "passed"
-         : (ab === "failed" || at === "failed") ? "failed"
+         : (ab === "failed" || at === "failed")  ? "failed"
          : (ab === "not-run" && at === "not-run") ? "not-run" : "pending";
-  put("validate-status", badge(vs));
-  list("followups", A.followUps, "None recorded.", function (li, t) { li.textContent = t; });
-  text("updated", R.updated, "not recorded");
 
-  // ---- Outcome banner: derived only from recorded statuses ----
-  var targetOk = !aId.trim() || /red\s*hat/i.test(aId);
+  var appSt = norm(A.appRun);
+
+  var impactData = [
+    {
+      label: "Compatibility",
+      icon: "highlight",
+      value: as === "not-run"
+        ? "Assessment not yet run. Bob\u2019s workflow will inspect source, dependencies, and build configuration for Oracle-specific APIs or settings."
+        : (findings.length
+          ? findings.length + " concern(s) identified and addressed. Review the findings above."
+          : "No Oracle-specific APIs or compatibility concerns were found. The application uses standard Java 17 APIs that behave identically across JDK vendors.")
+    },
+    {
+      label: "Developer effort (Bob\u2019s contribution)",
+      icon: "",
+      value: as === "not-run"
+        ? "Not yet recorded."
+        : (noChanges
+          ? "Bob assessed the full project and confirmed no code changes were needed. The structured assessment \u2014 not guesswork \u2014 provides that confidence."
+          : "Bob identified the required changes and assisted in applying them, reducing the manual review needed for each file.")
+    },
+    {
+      label: "Validation",
+      icon: vs === "passed" ? "highlight" : "",
+      value: vs === "passed"
+        ? "Build succeeded and all 8 unit tests passed on Red Hat OpenJDK 17 (RHEL 9.6). Application started successfully and confirmed the Red Hat vendor string."
+        : (vs === "failed"
+          ? "Validation failed on the target. See test results in Section B."
+          : "Validation on the RHEL 9.6 VM not yet completed. Run ./scripts/validate-rhel.sh and record the result.")
+    },
+    {
+      label: "Remaining risk before production",
+      icon: "",
+      value: (A.followUps && A.followUps.length)
+        ? A.followUps.join(" \u2022 ")
+        : "This demo covers build, unit tests, and application startup only. Before promoting to production: run the full integration and performance test suite, review container base images (if applicable), update CI/CD pipeline JDK references, and confirm the Red Hat OpenJDK support contract meets Amgen\u2019s requirements."
+    }
+  ];
+
+  var grid = document.getElementById("impact-grid");
+  grid.textContent = "";
+  impactData.forEach(function (item) {
+    var card = document.createElement("div");
+    card.className = "impact-card" + (item.icon === "highlight" ? " highlight" : "");
+    var lbl = document.createElement("div"); lbl.className = "ic-label"; lbl.textContent = item.label;
+    var val = document.createElement("div"); val.className = "ic-value"; val.textContent = item.value;
+    card.appendChild(lbl); card.appendChild(val);
+    grid.appendChild(card);
+  });
+
+  /* ── E. Evidence strip ─────────────────────────────────────────────────── */
+  var evData = [
+    { key: "Last updated",            val: s(R.updated) || "Not recorded" },
+    { key: "Before: vendor",          val: s(B.vendor)  || NR },
+    { key: "Before: version",         val: s(B.version) || NR },
+    { key: "Before: build",           val: s(B.build && B.build.detail) || LABELS[norm(B.build)] },
+    { key: "Before: tests",           val: s(B.tests && B.tests.detail) || LABELS[norm(B.tests)] },
+    { key: "Assessment",              val: s(S.summary) || LABELS[as] },
+    { key: "Changes",                 val: noChanges ? "None required" : (s(C.summary) || LABELS[cs]) },
+    { key: "After: vendor",           val: s(A.vendor)  || NR },
+    { key: "After: version",          val: s(A.version) || NR },
+    { key: "After: java -version",    val: s(A.runtimeDetected) || NR },
+    { key: "After: build",            val: s(A.build && A.build.detail) || LABELS[norm(A.build)] },
+    { key: "After: tests",            val: s(A.tests && A.tests.detail) || LABELS[norm(A.tests)] },
+    { key: "After: app startup",      val: s(A.appRun && A.appRun.detail) || LABELS[norm(A.appRun)] }
+  ];
+  var strip = document.getElementById("evidence-strip");
+  strip.textContent = "";
+  evData.forEach(function (row) {
+    var d = document.createElement("div"); d.className = "ev-row";
+    var k = document.createElement("span"); k.className = "ev-key"; k.textContent = row.key;
+    var v = document.createElement("span"); v.className = "ev-val"; v.textContent = row.val;
+    d.appendChild(k); d.appendChild(v);
+    strip.appendChild(d);
+  });
+
+  /* ── Outcome banner ────────────────────────────────────────────────────── */
+  var targetOk = !aStr.trim() || /red\s*hat/i.test(aStr);
   var state, title;
-  if (vs === "failed") { state = "failed"; title = "Validation failed on the target runtime"; }
-  else if (vs === "passed" && targetOk) { state = "passed"; title = "Validated: build and unit tests passed on the target runtime"; }
-  else if (vs === "passed") { state = "pending"; title = "Build and tests passed, but the recorded runtime is not Red Hat OpenJDK"; }
-  else if (as !== "not-run" || cs !== "not-run") { state = "pending"; title = "Assessment recorded: target validation pending"; }
-  else { state = "pending"; title = "Outcome not yet recorded"; }
-  document.getElementById("outcome").className = "outcome " + state;
-  text("outcome-title", title, "");
-  put("outcome-badge", badge(vs === "passed" && targetOk ? "passed" : vs === "failed" ? "failed" : vs === "not-run" && as === "not-run" ? "not-run" : "pending"));
-  text("outcome-facts",
-       "Assessment: " + LABEL[as] + "  |  Changes: " + (noChanges ? "None required" : LABEL[cs]) +
-       "  |  Target build: " + LABEL[ab] + "  |  Target tests: " + LABEL[at], "");
-  text("outcome-summary", O.summary, "");
+  if (vs === "failed") {
+    state = "failed"; title = "Validation failed on the target runtime";
+  } else if (vs === "passed" && targetOk) {
+    state = "passed"; title = "Validated \u2014 build and unit tests passed on Red Hat OpenJDK 17 (RHEL 9.6)";
+  } else if (vs === "passed") {
+    state = "pending"; title = "Build and tests passed, but target runtime is not confirmed as Red Hat OpenJDK";
+  } else if (as !== "not-run" || cs !== "not-run") {
+    state = "pending"; title = "Assessment recorded \u2014 RHEL 9.6 validation pending";
+  } else {
+    state = "pending"; title = "Outcome not yet recorded";
+  }
+  var banner = document.getElementById("outcome-banner");
+  banner.className = state;
+  document.getElementById("ob-title").textContent = title;
+  setNode("ob-badge", badge(vs === "passed" && targetOk ? "passed" : vs === "failed" ? "failed" : "pending"));
+  var facts = "Assessment: " + LABELS[as]
+    + "  \u00b7  Changes: " + (noChanges ? "None required" : LABELS[cs])
+    + "  \u00b7  Build: " + LABELS[ab]
+    + "  \u00b7  Tests: " + LABELS[at]
+    + "  \u00b7  App: " + LABELS[appSt];
+  document.getElementById("ob-facts").textContent = facts;
+  if (s(O.summary)) {
+    var os = document.createElement("div");
+    os.style.cssText = "font-size:14px;color:#161616;margin-top:6px;";
+    os.textContent = s(O.summary);
+    banner.appendChild(os);
+  }
 })();
 </script>
 </body>

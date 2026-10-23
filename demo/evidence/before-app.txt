@@ -1,0 +1,23 @@
+==============================================
+ Lab Sample Tracker - Java Modernization Demo
+==============================================
+Java version : 17.0.20.1
+Java vendor  : Oracle Corporation
+Java home    : /Users/jazzyrao/Library/Java/JavaVirtualMachines/jdk-17.0.20.1.jdk/Contents/Home
+
+[1] Create samples
+    SMP-1001 | Blood Plasma | RECEIVED
+    SMP-1002 | Cell Culture | RECEIVED
+[2] Retrieve sample SMP-1001
+    SMP-1001 | Blood Plasma | RECEIVED
+[3] Update status of SMP-1001
+    SMP-1001 | Blood Plasma | IN_PROGRESS
+    SMP-1001 | Blood Plasma | COMPLETED
+[4] Invalid input handling
+    Rejected: Invalid sample ID 'BAD-ID': expected format SMP-1234
+    Rejected: Sample type must not be blank
+    Rejected: Sample not found: SMP-9999
+
+Demo complete.
+
+Captured: 2026-10-23 11:26 PDT

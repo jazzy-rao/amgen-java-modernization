@@ -1,0 +1,26 @@
+--- Maven version ---
+Apache Maven 3.6.3 (Red Hat 3.6.3-22)
+Maven home: /usr/share/maven
+Java version: 17.0.20.1, vendor: Red Hat, Inc., runtime: /usr/lib/jvm/java-17-openjdk-17.0.20.1.1-1.1.el9.x86_64
+Default locale: en, platform encoding: UTF-8
+OS name: "linux", version: "5.14.0-570.150.1.el9_6.x86_64", arch: "amd64", family: "unix"
+
+--- mvn clean verify (tail) ---
+[INFO] Running com.amgen.demo.sample.SampleServiceTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.090 s -- in com.amgen.demo.sample.SampleServiceTest
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] --- maven-jar-plugin:3.3.0:jar (default-jar) @ java-modernization-demo ---
+[INFO] Building jar: /home/itzuser/java-modernization-demo/target/java-modernization-demo-1.0.0.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.608 s
+[INFO] Finished at: 2026-10-23T19:35:52Z
+[INFO] ------------------------------------------------------------------------
+
+Captured: 2026-10-23 19:35 UTC
+Host: itzvsi-mc49ni5k (169.63.176.9) — RHEL 9.6 on IBM Cloud VPC

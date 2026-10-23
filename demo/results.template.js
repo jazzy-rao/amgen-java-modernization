@@ -1,57 +1,64 @@
 /*
- * DEMO RESULTS - edit demo/results.js (NOT this template) during the demo, then refresh index.html.
- * scripts/reset-demo.sh copies this template over demo/results.js, so every run starts as "Not yet run".
+ * demo/results.template.js — blank template.
  *
- * status values (anything else is shown as "Not yet run"):
- *   "not-run"  -> Not yet run
- *   "pending"  -> Pending verification
- *   "passed"   -> Passed   (use ONLY when a real build/test run supports it; needs a non-empty "detail")
- *   "failed"   -> Failed
- *   "info"     -> Info / completed with no issue to report
+ * reset-demo.sh copies this file over demo/results.js at the start of each demo run.
+ * Do NOT edit this template to pre-fill results. Edit demo/results.js during the demo.
  *
- * Fill in only what actually happened. Never pre-fill expected results.
- *   - "detail" is free text, e.g. "mvn clean verify: 8 tests, 0 failures".
- *   - "runtimeDetected" is the exact `java -version` first line you observed.
- *   - "vendor" / "version" are read from that same output (or `java -XshowSettings:properties` -> java.vendor).
+ * STATUS VALUES  (anything else is shown as "Not yet run"):
+ *   "not-run"   Not yet run
+ *   "pending"   Pending verification
+ *   "passed"    Passed   ← use ONLY when a real run supports it AND a non-empty "detail" is provided
+ *   "failed"    Failed
+ *   "info"      Info / completed with no concern (e.g. no changes required)
  *
- * NO CHANGES NEEDED: if Bob finds nothing to change, record
- *   changes: { status: "info", summary: "<what Bob said>", files: [] }
- * The dashboard then shows "No code or configuration changes were identified as required".
- * Do not invent a change just to fill the section.
+ * HONESTY RULES:
+ *   - Fill in only what actually happened. Never pre-fill expected results.
+ *   - "detail" is free text copied from real output, e.g. "Tests run: 8, Failures: 0, BUILD SUCCESS".
+ *   - "runtimeDetected" is the exact first line of `java -version` you observed.
+ *   - "vendor" / "version" come from `java -XshowSettings:property -version` → java.vendor / java.version.
+ *   - If Bob finds nothing to change, record:
+ *       changes: { status: "info", summary: "No changes required", files: [] }
+ *   - Do not invent findings, changes, or passing results.
  */
 window.DEMO_RESULTS = {
-  updated: "",                       // e.g. "2025-01-31 14:05" - when you last edited this file
+  updated: "",          // e.g. "2025-07-14 14:05 PDT" — fill in when you last edited this file
 
   outcome: {
-    summary: ""                      // optional one-sentence headline written by you AFTER validation
+    summary: ""         // optional one-sentence headline, written AFTER the full demo run is complete
   },
 
-  before: {                          // LEFT: Oracle JDK 17 baseline
-    vendor: "",                      // e.g. observed java.vendor
-    version: "",                     // e.g. observed java.version
-    runtimeDetected: "",             // first line of `java -version`
-    build: { status: "not-run", detail: "" },
-    tests: { status: "not-run", detail: "" }
+  // ── LEFT panel: Oracle JDK 17 baseline ─────────────────────────────────────
+  before: {
+    vendor:          "",    // observed java.vendor,         e.g. "Oracle Corporation"
+    version:         "",    // observed java.version,        e.g. "17.0.12"
+    runtimeDetected: "",    // first line of java -version,  e.g. "java version \"17.0.12\" 2024-07-16 LTS"
+    build:  { status: "not-run", detail: "" },   // e.g. "mvn clean verify: BUILD SUCCESS"
+    tests:  { status: "not-run", detail: "" }    // e.g. "8 run, 0 failures, 0 errors, 0 skipped"
   },
 
-  assessment: {                      // CENTER: Bob's assessment (FINDING)
-    status: "not-run",
-    summary: "",                     // one or two sentences copied from Bob's report
-    findings: []                     // actual compatibility concerns Bob reported; [] if none
+  // ── CENTER: IBM Bob assessment ──────────────────────────────────────────────
+  assessment: {
+    status:   "not-run",
+    summary:  "",           // one or two sentences from Bob's actual report
+    findings: []            // actual concerns Bob reported; [] if none
   },
 
-  changes: {                         // CENTER: migration changes actually applied (CHANGE)
-    status: "not-run",
-    summary: "",                     // e.g. "No source changes were needed" (only if true)
-    files: []                        // e.g. [{ path: "pom.xml", note: "what changed", reason: "why" }]
+  // ── CENTER: Migration changes actually applied ──────────────────────────────
+  changes: {
+    status:  "not-run",
+    summary: "",            // e.g. "No source changes needed" — only if true
+    files:   []
+    // { path: "pom.xml", note: "what changed", reason: "why it was needed", bobAssisted: true }
   },
 
-  after: {                           // RIGHT: Red Hat OpenJDK 17 target
-    vendor: "",
-    version: "",
-    runtimeDetected: "",             // first line of `java -version` on the target
-    build: { status: "not-run", detail: "" },
-    tests: { status: "not-run", detail: "" },
-    followUps: []                    // remaining issues / actions, e.g. ["Update CI base image"]
+  // ── RIGHT panel: Red Hat OpenJDK 17 on RHEL 9.6 ────────────────────────────
+  after: {
+    vendor:          "",    // observed java.vendor,  e.g. "Red Hat, Inc."
+    version:         "",    // observed java.version, e.g. "17.0.20.1"
+    runtimeDetected: "",    // first line of java -version on the RHEL VM
+    build:  { status: "not-run", detail: "" },
+    tests:  { status: "not-run", detail: "" },
+    appRun: { status: "not-run", detail: "" },  // e.g. "App printed Red Hat vendor string; Demo complete."
+    followUps: []           // e.g. ["Update CI base image to ubi9/openjdk-17"]
   }
 };

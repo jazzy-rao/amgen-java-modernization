@@ -1,0 +1,11 @@
+openjdk version "17.0.20.1" 2026-08-18 LTS
+OpenJDK Runtime Environment (Red_Hat-17.0.20.1.1-1) (build 17.0.20.1+1-LTS)
+OpenJDK 64-Bit Server VM (Red_Hat-17.0.20.1.1-1) (build 17.0.20.1+1-LTS, mixed mode, sharing)
+
+JAVA_HOME : /usr/lib/jvm/java-17-openjdk
+java.vendor  : Red Hat, Inc.
+java.version : 17.0.20.1
+
+Captured: 2026-10-23 19:35 UTC
+Host: itzvsi-mc49ni5k (169.63.176.9) — RHEL 9.6 on IBM Cloud VPC
+Kernel: 5.14.0-570.150.1.el9_6.x86_64

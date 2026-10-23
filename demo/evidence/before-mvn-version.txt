@@ -1,0 +1,7 @@
+Apache Maven 3.10.0 (c43a36b8d67be7e0805a411bc0898af1a51f5472)
+Maven home: /opt/homebrew/Cellar/maven/3.10.0/libexec
+Java version: 17.0.20.1, vendor: Oracle Corporation, runtime: /Users/jazzyrao/Library/Java/JavaVirtualMachines/jdk-17.0.20.1.jdk/Contents/Home
+Default locale: en_US, platform encoding: UTF-8, time zone: America/Los_Angeles
+OS name: "mac os x", version: "26.6.2", arch: "aarch64", family: "mac"
+
+Captured: 2026-10-23 11:26 PDT
